@@ -13,6 +13,8 @@ import com.mygdx.game.gameobjects.PongBall;
 import com.mygdx.game.gameobjects.PongInput;
 import com.mygdx.game.gameobjects.PongPlayer;
 
+import sun.jvm.hotspot.debugger.posix.elf.ELFSectionHeader;
+
 
 public class PongPlayState extends State{
     
@@ -26,6 +28,8 @@ public class PongPlayState extends State{
     
     private final GlyphLayout playerScoreText;
     private final BitmapFont font;
+    
+    private boolean playerHasWon = false;
     
     
     public PongPlayState(GameStateManager stateManager) {
@@ -56,7 +60,7 @@ public class PongPlayState extends State{
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        
+            
         shapeRenderer.circle(pongBall.getBounds().x, pongBall.getBounds().y, pongBall.getBounds().width);
         shapeRenderer.rect(playerOne.getBounds().x, playerOne.getBounds().y, playerWidth, playerHeight);
         shapeRenderer.rect(playerTwo.getBounds().x, playerTwo.getBounds().y, playerWidth, playerHeight);
@@ -67,8 +71,15 @@ public class PongPlayState extends State{
         shapeRenderer.rectLine(new Vector2(MyGdxGame.WIDTH - 5, MyGdxGame.HEIGHT), new Vector2(MyGdxGame.WIDTH - 5, 0), 1);
 
         spriteBatch.begin();
-        playerScoreText.setText(font, String.format("Player 1 : %d | Player 2 : %d", playerOne.getScore(), playerTwo.getScore()));
-        font.draw(spriteBatch, playerScoreText , (MyGdxGame.WIDTH - playerScoreText.width) / 2, MyGdxGame.HEIGHT - 25);
+        if(!playerHasWon) {
+            playerScoreText.setText(font, String.format("Player 1 : %d | Player 2 : %d", playerOne.getScore(), playerTwo.getScore()));
+            font.draw(spriteBatch, playerScoreText , (MyGdxGame.WIDTH - playerScoreText.width) / 2, MyGdxGame.HEIGHT - 25);
+        }else {
+            playerScoreText.setText(font, playerOne.getScore() >= 21 ? String.format("Player One has won! %nPress Escape to go back to main menu")
+                    : String.format("Player Two has won! %nPress Escape to go back to main menu"));
+            font.draw(spriteBatch, playerScoreText , (MyGdxGame.WIDTH - playerScoreText.width) / 2, MyGdxGame.HEIGHT / 2);
+        }
+        
         spriteBatch.end();
         shapeRenderer.end();
     }
@@ -76,6 +87,12 @@ public class PongPlayState extends State{
     @Override
     public void update(float deltaTime) {
         handleInput();
+        
+        if(playerOne.getScore() >= 21 || playerTwo.getScore() >= 21) {
+            playerHasWon = true;
+        }
+        if(playerHasWon)
+            return;
         
         if(pongBall.checkCollision(playerOne.getBounds())) {
             
